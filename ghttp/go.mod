@@ -1,4 +1,4 @@
-module github.com/aucfan-yotsuya/gotools/hello
+module github.com/aucfan-yotsuya/gotools/ghttp
 
 go 1.16
 
