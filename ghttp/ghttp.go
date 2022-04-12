@@ -95,7 +95,7 @@ func (g *Ghttp) UnixGet(sockfile, url string, headers map[string]string, body io
 	}
 	return nil
 }
-func (g *Ghttp) UnixPost(url string, body io.Reader) error {
+func UnixPost(url string, body io.Reader) error {
 	var err error
 	return err
 }
