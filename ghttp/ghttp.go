@@ -9,27 +9,27 @@ import (
 	"time"
 )
 
-type ghttp struct {
+type Ghttp struct {
 	req                           *http.Request
 	res                           *http.Response
 	client                        http.Client
 	connTimeout, keepaliveTimeout time.Duration
 }
 
-func New() *ghttp {
-	var g *ghttp
+func New() *Ghttp {
+	var g *Ghttp
 	g.req = new(http.Request)
 	g.res = new(http.Response)
 	g.connTimeout = 10 * time.Second
 	g.keepaliveTimeout = 1 * time.Minute
 	return g
 }
-func (g *ghttp) NewRequest(method, url string, body io.Reader) error {
+func (g *Ghttp) NewRequest(method, url string, body io.Reader) error {
 	var err error
 	g.req, err = http.NewRequest(method, url, body)
 	return err
 }
-func (g *ghttp) SetHeaders(headers map[string]string) *ghttp {
+func (g *Ghttp) SetHeaders(headers map[string]string) *Ghttp {
 	var (
 		k, v string
 	)
@@ -38,7 +38,7 @@ func (g *ghttp) SetHeaders(headers map[string]string) *ghttp {
 	}
 	return g
 }
-func (g *ghttp) NewClient(connTimeout, keepaliveTimeout time.Duration) http.Client {
+func (g *Ghttp) NewClient(connTimeout, keepaliveTimeout time.Duration) http.Client {
 	return http.Client{
 		Transport: &http.Transport{
 			DialContext: (&net.Dialer{
@@ -48,7 +48,7 @@ func (g *ghttp) NewClient(connTimeout, keepaliveTimeout time.Duration) http.Clie
 		},
 	}
 }
-func (g *ghttp) NewClientPool(maxIdleConns int, idleConnTimeout, expectContinueTimeout, connTimeout, keepaliveTimeout time.Duration) http.Client {
+func (g *Ghttp) NewClientPool(maxIdleConns int, idleConnTimeout, expectContinueTimeout, connTimeout, keepaliveTimeout time.Duration) http.Client {
 	return http.Client{
 		Transport: &http.Transport{
 			DialContext: (&net.Dialer{
@@ -61,7 +61,7 @@ func (g *ghttp) NewClientPool(maxIdleConns int, idleConnTimeout, expectContinueT
 		},
 	}
 }
-func (g *ghttp) NewUnixClient(sockfile string) http.Client {
+func (g *Ghttp) NewUnixClient(sockfile string) http.Client {
 	return http.Client{
 		Transport: &http.Transport{
 			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
@@ -70,7 +70,7 @@ func (g *ghttp) NewUnixClient(sockfile string) http.Client {
 		},
 	}
 }
-func (g *ghttp) ResponseReadAll() []byte {
+func (g *Ghttp) ResponseReadAll() []byte {
 	var (
 		b   []byte
 		err error
@@ -81,7 +81,7 @@ func (g *ghttp) ResponseReadAll() []byte {
 	}
 	return b
 }
-func (g *ghttp) UnixGet(sockfile, url string, headers map[string]string, body io.Reader) error {
+func (g *Ghttp) UnixGet(sockfile, url string, headers map[string]string, body io.Reader) error {
 	var (
 		err error
 	)
@@ -95,15 +95,15 @@ func (g *ghttp) UnixGet(sockfile, url string, headers map[string]string, body io
 	}
 	return nil
 }
-func (g *ghttp) UnixPost(url string, body io.Reader) error {
+func (g *Ghttp) UnixPost(url string, body io.Reader) error {
 	var err error
 	return err
 }
-func (g *ghttp) UnixHead(url string, body io.Reader) error {
+func (g *Ghttp) UnixHead(url string, body io.Reader) error {
 	var err error
 	return err
 }
-func (g *ghttp) Get(url string, headers map[string]string, body io.Reader) error {
+func (g *Ghttp) Get(url string, headers map[string]string, body io.Reader) error {
 	var err error
 	if err = g.NewRequest("GET", url, body); err != nil {
 		return err
@@ -115,7 +115,7 @@ func (g *ghttp) Get(url string, headers map[string]string, body io.Reader) error
 	}
 	return nil
 }
-func (g *ghttp) Post(url string, body io.Reader) error {
+func (g *Ghttp) Post(url string, body io.Reader) error {
 	var err error
 	return err
 }
