@@ -16,7 +16,8 @@ type ghttp struct {
 	connTimeout, keepaliveTimeout time.Duration
 }
 
-func (g *ghttp) New() *ghttp {
+func New() *ghttp {
+	var g *ghttp
 	g.req = new(http.Request)
 	g.res = new(http.Response)
 	g.connTimeout = 10 * time.Second
