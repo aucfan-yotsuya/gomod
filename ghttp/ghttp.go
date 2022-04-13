@@ -1,44 +1,32 @@
-package ghttp
+package github.com/aucfan-yotsuya/gotools/ghttp
 
 import (
-	"context"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"time"
 )
 
-type Ghttp struct {
-	req                           *http.Request
-	res                           *http.Response
-	client                        http.Client
-	connTimeout, keepaliveTimeout time.Duration
-}
+type (
+	Ghttp struct {
+		req                           *http.Request
+		res                           *http.Response
+		client                        http.Client
+		connTimeout, keepaliveTimeout time.Duration
+	}
+)
 
 func New() *Ghttp {
 	var g *Ghttp
-	g.req = new(http.Request)
 	g.res = new(http.Response)
 	g.connTimeout = 10 * time.Second
 	g.keepaliveTimeout = 1 * time.Minute
 	return g
 }
-func (g *Ghttp) NewRequest(method, url string, body io.Reader) error {
-	var err error
-	g.req, err = http.NewRequest(method, url, body)
-	return err
+func NewRequest(method, url string, body io.Reader) (*http.Request, error) {
+	return http.NewRequest(method, url, body)
 }
-func (g *Ghttp) SetHeaders(headers map[string]string) *Ghttp {
-	var (
-		k, v string
-	)
-	for k, v = range headers {
-		g.req.Header.Set(k, v)
-	}
-	return g
-}
-func (g *Ghttp) NewClient(connTimeout, keepaliveTimeout time.Duration) http.Client {
+func NewClient(connTimeout, keepaliveTimeout time.Duration) http.Client {
 	return http.Client{
 		Transport: &http.Transport{
 			DialContext: (&net.Dialer{
@@ -46,6 +34,16 @@ func (g *Ghttp) NewClient(connTimeout, keepaliveTimeout time.Duration) http.Clie
 				KeepAlive: keepaliveTimeout,
 			}).DialContext,
 		},
+	}
+}
+
+/*
+func SetHeaders(req *http.Request, headers map[string]string) {
+	var (
+		k, v string
+	)
+	for k, v = range headers {
+		req.Header.Set(k, v)
 	}
 }
 func (g *Ghttp) NewClientPool(maxIdleConns int, idleConnTimeout, expectContinueTimeout, connTimeout, keepaliveTimeout time.Duration) http.Client {
@@ -81,14 +79,15 @@ func (g *Ghttp) ResponseReadAll() []byte {
 	}
 	return b
 }
-func (g *Ghttp) UnixGet(sockfile, url string, headers map[string]string, body io.Reader) error {
+func UnixGet(sockfile, url string, headers map[string]string, body io.Reader) error {
 	var (
+		req *http.Request
 		err error
 	)
-	if err = g.NewRequest("GET", url, body); err != nil {
+	if req, err = NewRequest("GET", url, body); err != nil {
 		return err
 	}
-	g.SetHeaders(headers)
+	SetHeaders(headers)
 	c := g.NewUnixClient(sockfile)
 	if g.res, err = c.Do(g.req); err != nil {
 		return err
@@ -119,3 +118,4 @@ func (g *Ghttp) Post(url string, body io.Reader) error {
 	var err error
 	return err
 }
+*/
