@@ -9,18 +9,14 @@ import (
 
 type (
 	Ghttp struct {
-		req                           *http.Request
-		res                           *http.Response
-		client                        http.Client
-		connTimeout, keepaliveTimeout time.Duration
+		ConnTimeout KeepAliveTimeout time.Duration
 	}
 )
 
 func New() *Ghttp {
 	var g *Ghttp
-	g.res = new(http.Response)
-	g.connTimeout = 10 * time.Second
-	g.keepaliveTimeout = 1 * time.Minute
+	g.ConnTimeout = 10 * time.Second
+	g.KeepAliveTimeout = 1 * time.Minute
 	return g
 }
 func NewRequest(method, url string, body io.Reader) (*http.Request, error) {
