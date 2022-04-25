@@ -18,7 +18,9 @@ func New() *Scan {
 	return new(Scan)
 }
 func Once(filename string) []byte {
-	return New().Open(filename).ReadAll().Close().Byte
+	var s *Scan = New()
+	defer s.File.Close()
+	return s.Open(filename).ReadAll().Byte
 }
 func (s *Scan) Open(filename string) *Scan {
 	s.File, err = os.Open(filename)
