@@ -18,10 +18,10 @@ func New() *Scan {
 	return new(Scan)
 }
 func Once(filename string) []byte {
-	return New().Open(&filename).ReadAll().Close().Byte
+	return New().Open(filename).ReadAll().Close().Byte
 }
-func (s *Scan) Open(filename *string) *Scan {
-	s.File, err = os.Open(*filename)
+func (s *Scan) Open(filename string) *Scan {
+	s.File, err = os.Open(filename)
 	return s
 }
 func (s *Scan) Close() *Scan {
