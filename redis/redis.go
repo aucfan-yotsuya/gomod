@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gomod/common"
 	"net"
 	"strings"
 	"time"
+
+	"github.com/aucfan-yotsuya/gomod/common"
 
 	"github.com/gomodule/redigo/redis"
 )
