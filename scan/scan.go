@@ -23,7 +23,9 @@ func Once(filename string) []byte {
 	return s.Open(filename).ReadAll().Byte
 }
 func (s *Scan) Open(filename string) *Scan {
-	s.File, err = os.Open(filename)
+	if s.File, err = os.Open(filename); err != nil {
+		panic(err)
+	}
 	return s
 }
 func (s *Scan) Close() *Scan {
