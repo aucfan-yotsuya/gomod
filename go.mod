@@ -1,4 +1,4 @@
-module gomod
+module github.com/aucfan-yotsuya/gomod
 
 go 1.16
 
