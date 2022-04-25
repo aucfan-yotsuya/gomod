@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"gomod/common"
+	"github.com/aucfan-yotsuya/gomod/common"
 
 	"github.com/gomodule/redigo/redis"
 )
