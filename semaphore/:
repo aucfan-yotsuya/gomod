@@ -28,8 +28,13 @@ func (s *Scan) Open(filename string) *Scan {
 	}
 	return s
 }
+func (s *Scan) notNilFile() bool {
+	return s.File != nil
+}
 func (s *Scan) Close() *Scan {
-	s.File.Close()
+	if s.notNilFile() {
+		s.File.Close()
+	}
 	return s
 }
 func (s *Scan) ReadAll() *Scan {
@@ -39,6 +44,24 @@ func (s *Scan) ReadAll() *Scan {
 	return s
 }
 func (s *Scan) NewScanner() *Scan {
-	s.Scanner = bufio.NewScanner(s.File)
+	if s.notNilFile() {
+		s.Scanner = bufio.NewScanner(s.File)
+	}
 	return s
+}
+func (s *Scan) notNilScanner() bool {
+	return s.Scanner != nil
+}
+func (s *Scan) Scan() bool {
+	return s.notNilScanner() && s.Scanner.Scan()
+}
+func (s *Scan) Text() string {
+	var t = ""
+	t = s.notNilScanner() && s.Scanner.Text()
+	return t
+}
+func (s *Scan) Bytes() []byte {
+	var b = []byte("")
+	b = s.notNilScanner() && s.Scanner.Bytes()
+	return b
 }
