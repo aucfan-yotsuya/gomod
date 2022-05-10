@@ -30,6 +30,6 @@ var (
 	tg  *Target
 )
 
-func New() *Target {
-	return new(Target)
+func New() *Redis {
+	return new(Redis)
 }

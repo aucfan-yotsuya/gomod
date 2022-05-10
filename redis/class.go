@@ -11,7 +11,7 @@ import (
 )
 
 func (r *Redis) NewTarget() *Target {
-	var tg = NewTarget()
+	var tg = new(Target)
 	r.Target = append(r.Target, tg)
 	return tg
 }
@@ -29,9 +29,6 @@ func (r *Redis) Close() {
 		r.Target[i] = nil
 	}
 	r.Target = []*Target{}
-}
-func NewTarget() *Target {
-	return new(Target)
 }
 func (tg *Target) NilConn() bool { return tg.Conn == nil }
 func (tg *Target) NilPool() bool { return tg.Pool == nil }
