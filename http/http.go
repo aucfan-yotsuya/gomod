@@ -10,48 +10,91 @@ import (
 	"github.com/aucfan-yotsuya/gomod/common"
 )
 
+const (
+	DebugNone int = iota
+	DebugHeaderOnly
+	DebugAll
+)
+
+type (
+	HTTP struct {
+		Request                   *http.Request
+		Response                  *http.Response
+		Client                    *http.Client
+		Timeout, KeepAliveTimeout time.Duration
+		InsecureSkipVerify        bool
+		Sockfile                  string
+		Debug                     Debug
+	}
+	GetOpt struct {
+		Url    *string
+		Body   *io.Reader
+		Header *[]string
+	}
+	Debug struct {
+		Request  int
+		Response int
+	}
+	Request struct {
+		Method *string
+		Url    *string
+		Body   *io.Reader
+		Header *[]string
+	}
+	Response struct {
+		StatusCode int
+		Header     http.Header
+		Body       []byte
+	}
+)
+
 var (
 	h   *HTTP
 	err error
 )
 
-func New() *HTTP {
+func New(timeout time.Duration) *HTTP {
 	h = new(HTTP)
-	h.Timeout = 60 * time.Second
+	h.Timeout = timeout
 	return h
 }
-func Get(h *HTTP, url string, body io.Reader, headers map[string]string) ([]byte, error) {
-	h.BeforeRequest(
-		common.StringPtr("GET"),
-		&url, &body, &headers,
-	)
-	h.NewContext()
-	if h.Request, err = http.NewRequestWithContext(h.ctx, "GET", url, body); err != nil {
-		return nil, &ErrRequest{Message: err.Error()}
+func Get(h *HTTP, opt *GetOpt) (Response, error) {
+	defer h.Close()
+	if err = h.BeforeRequest(&Request{
+		Method: common.Pstring("GET"),
+		Url:    opt.Url,
+		Body:   opt.Body,
+		Header: opt.Header,
+	}); err != nil {
+		return Response{}, err
 	}
-	if h.Debug.Request {
+	if h.Debug.Request > DebugNone {
 		var b []byte
 		if b, err = h.DumpRequest(); err != nil {
-			return nil, &ErrRequest{Message: err.Error()}
+			return Response{}, err
 		}
 		fmt.Fprintf(os.Stderr, string(b))
 	}
-	for k, v := range headers {
-		h.Request.Header.Add(k, v)
+	if err = h.NewClient().Do(); err != nil {
+		return Response{}, err
 	}
-	if h.Response, err = h.NewClient().Do(h.Request); err != nil {
-		if h.NilResponse() {
-			return nil, &ErrRequest{Message: err.Error()}
-		} else {
-			return nil, &ErrRequest{Message: err.Error(), StatusCode: h.Response.StatusCode}
-		}
-	}
-	if h.Debug.Response {
+	if h.Debug.Response > DebugNone {
 		var b []byte
 		if b, err = h.DumpResponse(); err != nil {
-			return nil, &ErrRequest{Message: err.Error()}
+			return Response{}, err
 		}
 		fmt.Fprintf(os.Stderr, string(b))
 	}
-	return h.ReadAll()
+
+	defer h.Response.Body.Close()
+	var response []byte
+	if response, err = h.ReadAllResponse(); err != nil {
+		return Response{}, err
+	}
+
+	return Response{
+		StatusCode: h.Response.StatusCode,
+		Header:     h.Response.Header,
+		Body:       response,
+	}, nil
 }
