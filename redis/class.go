@@ -2,191 +2,137 @@ package redis
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net"
 	"strings"
-	"time"
 
 	"github.com/aucfan-yotsuya/gomod/common"
 
 	"github.com/gomodule/redigo/redis"
 )
 
-type (
-	Endpoint struct {
-		Redis []*Redis
-	}
-	Redis struct {
-		Conn    redis.Conn
-		Pool    *redis.Pool
-		tcpConn net.Conn
-		ctx     context.Context
-		cf      context.CancelFunc
-		dialer  net.Dialer
-		timeout time.Duration
-	}
-	RedisConnOpt struct {
-		Context context.Context
-		Host    string
-		Port    int
-		Timeout time.Duration
-	}
-	RedisPoolOpt struct {
-	}
-)
-
-func (e *Endpoint) NewRedis() *Redis {
-	var r *Redis = NewRedis()
-	e.Redis = append(e.Redis, r)
-	return r
+func (r *Redis) NewTarget() *Target {
+	var tg = NewTarget()
+	r.Target = append(r.Target, tg)
+	return tg
 }
-func (e *Endpoint) NilRedis(index int) bool {
-	return e.Redis[index] == nil
-}
-func (e *Endpoint) RedisLen() int {
-	return len(e.Redis)
-}
-func (e *Endpoint) GetRedis(endpointIndex int) *Redis {
-	if e.RedisLen() < 1 {
+func (r *Redis) NilRedis(index int) bool { return r.Target[index] == nil }
+func (r *Redis) TargetLen() int          { return len(r.Target) }
+func (r *Redis) GetTarget(index int) *Target {
+	if r.TargetLen() < 1 {
 		return nil
 	}
-	return e.Redis[endpointIndex]
-}
-func (e *Endpoint) Close() {
-	for i := 0; i < e.RedisLen(); i++ {
-		e.GetRedis(i).Close()
-		e.Redis[i] = nil
-	}
-	e.Redis = []*Redis{}
-}
-func NewRedis() *Redis {
-	r = new(Redis)
-	return r
-}
-func (r *Redis) NilConn() bool {
-	return r.Conn == nil
-}
-func (r *Redis) NilPool() bool {
-	return r.Pool == nil
+	return r.Target[index]
 }
 func (r *Redis) Close() {
-	if !r.NilConn() {
-		r.Conn.Close()
-		r.Conn = nil
+	for i := 0; i < r.TargetLen(); i++ {
+		r.GetTarget(i).Close()
+		r.Target[i] = nil
 	}
-	if !r.NilPool() {
-		r.Pool.Close()
-		r.Pool = nil
+	r.Target = []*Target{}
+}
+func NewTarget() *Target {
+	return new(Target)
+}
+func (tg *Target) NilConn() bool { return tg.Conn == nil }
+func (tg *Target) NilPool() bool { return tg.Pool == nil }
+func (tg *Target) Close() {
+	if !tg.NilConn() {
+		tg.Conn.Close()
+		tg.Conn = nil
+	}
+	if !tg.NilPool() {
+		tg.Pool.Close()
+		tg.Pool = nil
 	}
 }
-func (r *Redis) NewContext(timeout time.Duration) {
-	r.timeout = timeout
-	r.ctx, r.cf = common.Context(timeout)
+func (tg *Target) NewConn(opt *RedisConnOpt) error {
+	if tg.tcpConn, err = tg.dialer.DialContext(
+		func() context.Context { ctx, _ := common.Context(opt.Timeout); return ctx }(),
+		"tcp",
+		fmt.Sprintf("%s:%d", opt.Host, opt.Port),
+	); err != nil {
+		return &Err{Message: err.Error()}
+	}
+	tg.Conn = redis.NewConn(tg.tcpConn, opt.Timeout, opt.Timeout)
+	if tg.NilConn() {
+		return &Err{Message: "redisConn has nil"}
+	}
+	return nil
 }
-func (r *Redis) NewConn(redisConnOpt *RedisConnOpt) error {
-	r.tcpConn, err = r.dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%d", host, port))
-	r.Conn = redis.NewConn(r.tcpConn, r.timeout, r.timeout)
-	return err
-	return r.newConnCore(redisConnOpt)
-}
-func (r *Redis) newConnCore(ctx context.Context, host string, port int) error {
-}
-func (r *Redis) NewPool(host string, port int, maxActive, maxIdle int, timeout time.Duration) *Redis {
-	var (
-		ctx context.Context
-		cf  context.CancelFunc
-	)
-	ctx, cf = r.NewContext(timeout)
-	r.Pool = &redis.Pool{
+func (tg *Target) NewPool(opt *RedisConnOpt) *Redis {
+	tg.Pool = &redis.Pool{
 		DialContext: func(ctx context.Context) (redis.Conn, error) {
 			var err error
-			if err = r.newConnCore(ctx, host, port); err != nil {
+			if err = tg.NewConn(opt); err != nil {
 				return nil, err
 			}
-			return r.Conn, nil
+			return tg.Conn, nil
 		},
-		IdleTimeout: r.timeout,
-		MaxActive:   maxActive,
-		MaxIdle:     maxIdle,
+		IdleTimeout: opt.Timeout,
+		MaxActive:   opt.PoolMaxActive,
+		MaxIdle:     opt.PoolMaxIdle,
 	}
 	return r
 }
-func (r *Redis) NewPoolConn() (redis.Conn, error) {
+func (tg *Target) NewPoolConn() (redis.Conn, error) {
 	var conn redis.Conn
 	if err != nil {
 		return nil, err
 	}
 	return conn, nil
 }
-func (r *Redis) GetConn() (redis.Conn, error) {
-	if r.Pool == nil {
-		if r.Conn == nil {
-			return nil, errors.New("no connection")
-		} else if ok := r.Ping(); !ok {
-			defer r.Conn.Close()
-			return nil, errors.New("no connection")
+func (tg *Target) GetConn() (redis.Conn, error) {
+	if tg.Pool == nil {
+		if tg.Conn == nil {
+			return nil, &Err{Message: "no connection"}
+		} else if ok := tg.Ping(); !ok {
+			defer tg.Conn.Close()
+			return nil, &Err{Message: "no connection"}
 		}
 	} else {
-		r.Conn = r.Pool.Get()
+		tg.Conn = tg.Pool.Get()
 	}
-	return r.Conn, nil
+	return tg.Conn, nil
 }
-func (r *Redis) Do(commandName string, args ...interface{}) (interface{}, error) {
-	if _, err = r.GetConn(); err != nil {
+func (tg *Target) Do(commandName string, args ...interface{}) (interface{}, error) {
+	if _, err = tg.GetConn(); err != nil {
 		return nil, err
 	}
-	return r.Conn.Do(commandName, args...)
+	return tg.Conn.Do(commandName, args...)
 }
-func (r *Redis) Ping() bool {
+func (tg *Target) Ping() bool {
 	var rep string
-	rep, err = redis.String(r.Conn.Do("ping"))
-	if err != nil {
+	if rep, err = redis.String(tg.Conn.Do("ping")); err != nil {
 		return false
 	}
 	return strings.Compare(rep, "PONG") == 0
 }
-func (r *Redis) HSetString(key string, keyValue map[string]string) error {
-	var (
-		err  error
-		k, v string
-	)
-
-	for k, v = range keyValue {
-		_, err = r.Do("hset", key, k, v)
-		if err != nil {
+func (tg *Target) HSetString(key string, keyValue map[string]string) error {
+	for k, v := range keyValue {
+		if _, err = tg.Do("hset", key, k, v); err != nil {
 			return err
 		}
 	}
 	return nil
 }
-func (r *Redis) HSet(key string, keyValue map[string][]byte) error {
-	var (
-		err error
-		k   string
-		v   []byte
-	)
-
-	for k, v = range keyValue {
-		_, err = r.Do("hset", key, k, v)
-		if err != nil {
+func (tg *Target) HSet(key string, keyValue map[string][]byte) error {
+	for k, v := range keyValue {
+		if _, err = tg.Do("hset", key, k, v); err != nil {
 			return err
 		}
 	}
 	return nil
 }
-func (r *Redis) HGetAll(key string) (map[string][]byte, error) {
+func (tg *Target) HGetAll(key string) (map[string][]byte, error) {
 	var (
 		rep [][]byte
-		i   int
 		k   string
-		v   []byte
 		m   = make(map[string][]byte)
 	)
-	if rep, err = redis.ByteSlices(r.Do("hgetall", key)); err != nil {
+	if rep, err = redis.ByteSlices(tg.Do("hgetall", key)); err != nil {
 		return make(map[string][]byte), err
 	}
-	for i, v = range rep {
+	for i, v := range rep {
 		if common.Number(i).Even() {
 			k = string(v)
 		} else {
@@ -195,17 +141,17 @@ func (r *Redis) HGetAll(key string) (map[string][]byte, error) {
 	}
 	return m, nil
 }
-func (r *Redis) Keys(keyName string) ([]string, error) {
+func (tg *Target) Keys(keyName string) ([]string, error) {
 	var rep []string
-	if rep, err = redis.Strings(r.Do("keys", keyName)); err != nil {
+	if rep, err = redis.Strings(tg.Do("keys", keyName)); err != nil {
 		return []string{}, err
 	}
 	return rep, nil
 }
-func (r *Redis) Expire(interval int, keys ...string) error {
+func (tg *Target) Expire(interval int, keys ...string) error {
 	var k string
 	for _, k = range keys {
-		_, err = r.Do("expire", k, interval)
+		_, err = tg.Do("expire", k, interval)
 		if err != nil {
 			return err
 		}
