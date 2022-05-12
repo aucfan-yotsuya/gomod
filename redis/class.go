@@ -104,6 +104,18 @@ func (tg *Target) Ping() bool {
 	}
 	return strings.Compare(rep, "PONG") == 0
 }
+func (tg *Target) LpushString(Key string, Value ...string) error {
+	if _, err = tg.Do("lpush", Key, Value); err != nil {
+		return err
+	}
+	return nil
+}
+func (tg *Target) Lpush(Key string, Value ...[]byte) error {
+	if _, err = tg.Do("lpush", Key, Value); err != nil {
+		return err
+	}
+	return nil
+}
 func (tg *Target) SetString(Key, Value string) error {
 	if _, err = tg.Do("set", Key, Value); err != nil {
 		return err
