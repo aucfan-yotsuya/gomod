@@ -104,6 +104,18 @@ func (tg *Target) Ping() bool {
 	}
 	return strings.Compare(rep, "PONG") == 0
 }
+func (tg *Target) SetString(Value string) error {
+	if _, err = tg.Do("set", Value); err != nil {
+		return err
+	}
+	return nil
+}
+func (tg *Target) Set(Value []byte) error {
+	if _, err = tg.Do("set", Value); err != nil {
+		return err
+	}
+	return nil
+}
 func (tg *Target) HSetString(key string, keyValue map[string]string) error {
 	for k, v := range keyValue {
 		if _, err = tg.Do("hset", key, k, v); err != nil {
