@@ -104,14 +104,14 @@ func (tg *Target) Ping() bool {
 	}
 	return strings.Compare(rep, "PONG") == 0
 }
-func (tg *Target) SetString(Value string) error {
-	if _, err = tg.Do("set", Value); err != nil {
+func (tg *Target) SetString(Key, Value string) error {
+	if _, err = tg.Do("set", Key, Value); err != nil {
 		return err
 	}
 	return nil
 }
-func (tg *Target) Set(Value []byte) error {
-	if _, err = tg.Do("set", Value); err != nil {
+func (tg *Target) Set(Key string, Value []byte) error {
+	if _, err = tg.Do("set", Key, Value); err != nil {
 		return err
 	}
 	return nil
