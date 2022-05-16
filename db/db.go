@@ -14,9 +14,9 @@ type (
 		Tx   *sql.Tx
 	}
 	DbConnOpt struct {
-		Driver, Dsn                      string
-		Port, PoolMaxActive, PoolMaxIdle int
-		Timeout                          time.Duration
+		Driver, Dsn                                       string
+		Port, PoolMaxActive, PoolMaxIdle                  int
+		Timeout, PoolConnMaxIdleTime, PoolConnMaxLifetime time.Duration
 	}
 )
 

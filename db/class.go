@@ -49,8 +49,8 @@ func (tg *Target) NewPool(opt *DbConnOpt) error {
 	tg.NewConn(opt)
 	tg.Conn.SetMaxIdleConns(opt.PoolMaxIdle)
 	tg.Conn.SetMaxOpenConns(opt.PoolMaxActive)
-	tg.Conn.SetConnMaxIdleTime(opt.Timeout)
-	tg.Conn.SetConnMaxLifetime(opt.Timeout)
+	tg.Conn.SetConnMaxIdleTime(opt.PoolConnMaxIdleTime)
+	tg.Conn.SetConnMaxLifetime(opt.PoolConnMaxLifetime)
 	return nil
 }
 func (tg *Target) Begin() error {
