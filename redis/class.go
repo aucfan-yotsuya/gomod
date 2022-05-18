@@ -70,13 +70,6 @@ func (tg *Target) NewPool(opt *RedisConnOpt) *Redis {
 	}
 	return r
 }
-func (tg *Target) NewPoolConn() (redis.Conn, error) {
-	var conn redis.Conn
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
-}
 func (tg *Target) GetConn() (redis.Conn, error) {
 	if tg.Pool == nil {
 		if tg.Conn == nil {
