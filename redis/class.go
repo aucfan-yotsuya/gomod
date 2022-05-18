@@ -42,14 +42,14 @@ func (tg *Target) Close() {
 	}
 }
 func (tg *Target) NewConn(opt *RedisConnOpt) error {
-	if tg.tcpConn, err = tg.dialer.DialContext(
+	if tg.netConn, err = tg.netDialer.DialContext(
 		func() context.Context { ctx, _ := common.Context(opt.Timeout); return ctx }(),
 		opt.Protocol,
 		opt.Address,
 	); err != nil {
 		return &Err{Message: err.Error()}
 	}
-	tg.Conn = redis.NewConn(tg.tcpConn, opt.Timeout, opt.Timeout)
+	tg.Conn = redis.NewConn(tg.netConn, opt.Timeout, opt.Timeout)
 	if tg.NilConn() {
 		return &Err{Message: "redisConn has nil"}
 	}

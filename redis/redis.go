@@ -12,10 +12,10 @@ type (
 		Target []*Target
 	}
 	Target struct {
-		Conn    redis.Conn
-		Pool    *redis.Pool
-		tcpConn net.Conn
-		dialer  net.Dialer
+		Conn      redis.Conn
+		Pool      *redis.Pool
+		netConn   net.Conn
+		netDialer net.Dialer
 	}
 	RedisConnOpt struct {
 		Protocol, Address          string
