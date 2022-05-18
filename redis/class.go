@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/aucfan-yotsuya/gomod/common"
@@ -45,8 +44,8 @@ func (tg *Target) Close() {
 func (tg *Target) NewConn(opt *RedisConnOpt) error {
 	if tg.tcpConn, err = tg.dialer.DialContext(
 		func() context.Context { ctx, _ := common.Context(opt.Timeout); return ctx }(),
-		"tcp",
-		fmt.Sprintf("%s:%d", opt.Host, opt.Port),
+		opt.Protocol,
+		opt.Address,
 	); err != nil {
 		return &Err{Message: err.Error()}
 	}

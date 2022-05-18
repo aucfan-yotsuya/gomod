@@ -18,9 +18,9 @@ type (
 		dialer  net.Dialer
 	}
 	RedisConnOpt struct {
-		Host                             string
-		Port, PoolMaxActive, PoolMaxIdle int
-		Timeout                          time.Duration
+		Protocol, Address          string
+		PoolMaxActive, PoolMaxIdle int
+		Timeout                    time.Duration
 	}
 )
 
