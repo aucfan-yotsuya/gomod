@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/aucfan-yotsuya/gomod/common"
 
@@ -16,6 +17,18 @@ func (r *Redis) NewTarget() *Target {
 }
 func (r *Redis) NilRedis(index int) bool { return r.Target[index] == nil }
 func (r *Redis) TargetLen() int          { return len(r.Target) }
+func (r *Redis) IncrRetryCount() bool {
+	time.Sleep(timeout)
+	if retryCount < maxRetryCount {
+		retryCount++
+		return true
+	}
+	return false
+}
+func (r *Redis) ResetRetryCount() bool {
+	retryCount = 0
+	return true
+}
 func (r *Redis) GetTarget(index int) *Target {
 	if r.TargetLen() < 1 {
 		return nil
@@ -41,25 +54,53 @@ func (tg *Target) Close() {
 		tg.Pool = nil
 	}
 }
+func (t *Target) IncrRetryCount() bool {
+	time.Sleep(timeout)
+	if retryCount < maxRetryCount {
+		retryCount++
+		return true
+	}
+	return false
+}
+func (t *Target) ResetRetryCount() bool {
+	retryCount = 0
+	return true
+}
 func (tg *Target) NewConn(opt *RedisConnOpt) error {
+	defer tg.ResetRetryCount()
+retryNetConn:
 	if tg.netConn, err = tg.netDialer.DialContext(
 		func() context.Context { ctx, _ := common.Context(opt.Timeout); return ctx }(),
 		opt.Protocol,
 		opt.Address,
 	); err != nil {
+		if tg.IncrRetryCount() {
+			goto retryNetConn
+		}
 		return &Err{Message: err.Error()}
 	}
+retryRedisConn:
 	tg.Conn = redis.NewConn(tg.netConn, opt.Timeout, opt.Timeout)
 	if tg.NilConn() {
+		if tg.IncrRetryCount() {
+			goto retryRedisConn
+		}
 		return &Err{Message: "redisConn has nil"}
 	}
+	maxRetryCount = opt.RetryCount
+	timeout = opt.Timeout
 	return nil
 }
 func (tg *Target) NewPool(opt *RedisConnOpt) *Redis {
 	tg.Pool = &redis.Pool{
 		DialContext: func(ctx context.Context) (redis.Conn, error) {
+			defer tg.ResetRetryCount()
+		retry:
 			var err error
 			if err = tg.NewConn(opt); err != nil {
+				if tg.IncrRetryCount() {
+					goto retry
+				}
 				return nil, err
 			}
 			return tg.Conn, nil
@@ -167,6 +208,9 @@ func (tg *Target) Expire(interval int, keys ...string) error {
 	for _, k = range keys {
 		_, err = tg.Do("expire", k, interval)
 		if err != nil {
+			if tg.IncrRetryCount() {
+				goto retry
+			}
 			return err
 		}
 	}

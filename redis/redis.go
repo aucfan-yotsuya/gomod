@@ -18,16 +18,19 @@ type (
 		netDialer net.Dialer
 	}
 	RedisConnOpt struct {
-		Protocol, Address          string
-		PoolMaxActive, PoolMaxIdle int
-		Timeout                    time.Duration
+		Protocol, Address                      string
+		PoolMaxActive, PoolMaxIdle, RetryCount int
+		Timeout                                time.Duration
 	}
 )
 
 var (
-	err error
-	r   *Redis
-	tg  *Target
+	err           error
+	r             *Redis
+	tg            *Target
+	retryCount    = 0
+	maxRetryCount = 0
+	timeout       time.Duration
 )
 
 func New() *Redis {
