@@ -82,8 +82,8 @@ func (tg *Target) GetConn() *Target {
 	return tg
 }
 func (tg *Target) Do(commandName string, args ...interface{}) (interface{}, error) {
-	if _, err = tg.GetConn(); err != nil {
-		return nil, err
+	if tg.GetConn(); tg.NilConn() {
+		return nil, &Err{Message: "Conn has nil"}
 	}
 	return tg.Conn.Do(commandName, args...)
 }
