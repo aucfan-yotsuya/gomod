@@ -231,3 +231,6 @@ func (tg *Target) Expire(interval int, keys ...string) error {
 	}
 	return nil
 }
+func (tg *Target) HIncrBy(Key string, Field string, Increment int) (int, error) {
+	return redis.Int(tg.Do("hincrby", Key, Field, Increment))
+}
