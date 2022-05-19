@@ -70,18 +70,16 @@ func (tg *Target) NewPool(opt *RedisConnOpt) *Redis {
 	}
 	return r
 }
-func (tg *Target) GetConn() (redis.Conn, error) {
+func (tg *Target) GetConn() *Target {
 	if tg.Pool == nil {
 		if tg.Conn == nil {
-			return nil, &Err{Message: "no connection"}
 		} else if ok := tg.Ping(); !ok {
 			defer tg.Conn.Close()
-			return nil, &Err{Message: "no connection"}
 		}
 	} else {
 		tg.Conn = tg.Pool.Get()
 	}
-	return tg.Conn, nil
+	return tg
 }
 func (tg *Target) Do(commandName string, args ...interface{}) (interface{}, error) {
 	if _, err = tg.GetConn(); err != nil {
