@@ -12,3 +12,7 @@ func (n Number) String() string {
 func (n Number) Even() bool {
 	return int(n)%2 == 0
 }
+func Atoi(i string) int {
+	n, _ := strconv.Atoi(i)
+	return n
+}
