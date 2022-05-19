@@ -89,6 +89,9 @@ func (tg *Target) Do(commandName string, args ...interface{}) (interface{}, erro
 }
 func (tg *Target) Ping() bool {
 	var rep string
+	if tg.NilConn() {
+		tg.GetConn()
+	}
 	if rep, err = redis.String(tg.Conn.Do("ping")); err != nil {
 		return false
 	}
