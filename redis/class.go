@@ -208,9 +208,6 @@ func (tg *Target) Expire(interval int, keys ...string) error {
 	for _, k = range keys {
 		_, err = tg.Do("expire", k, interval)
 		if err != nil {
-			if tg.IncrRetryCount() {
-				goto retry
-			}
 			return err
 		}
 	}
