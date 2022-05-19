@@ -196,6 +196,24 @@ func (tg *Target) HGetAll(key string) (map[string][]byte, error) {
 	}
 	return m, nil
 }
+func (tg *Target) HGetAllString(key string) (map[string]string, error) {
+	var (
+		rep [][]byte
+		k   string
+		m   = make(map[string]string)
+	)
+	if rep, err = redis.ByteSlices(tg.Do("hgetall", key)); err != nil {
+		return make(map[string]string), err
+	}
+	for i, v := range rep {
+		if common.Number(i).Even() {
+			k = string(v)
+		} else {
+			m[k] = string(v)
+		}
+	}
+	return m, nil
+}
 func (tg *Target) Keys(keyName string) ([]string, error) {
 	var rep []string
 	if rep, err = redis.Strings(tg.Do("keys", keyName)); err != nil {
