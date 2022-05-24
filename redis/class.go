@@ -243,7 +243,7 @@ func (tg *Target) Keys(keyName string) ([]string, error) {
 }
 func (tg *Target) GetExpire(key string) (int, error) {
 	var resp int
-	if resp, err = redis.Int(tg.Do("expire", key)); err != nil {
+	if resp, err = redis.Int(tg.Do("ttl", key)); err != nil {
 		return 0, err
 	}
 	return resp, nil
