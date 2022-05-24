@@ -241,7 +241,14 @@ func (tg *Target) Keys(keyName string) ([]string, error) {
 	}
 	return rep, nil
 }
-func (tg *Target) Expire(interval int, keys ...string) error {
+func (tg *Target) GetExpire(key string) (int, error) {
+	var resp int
+	if resp, err = redis.Int(tg.Do("expire", key)); err != nil {
+		return 0, err
+	}
+	return resp, nil
+}
+func (tg *Target) SetExpire(interval int, keys ...string) error {
 	var k string
 	for _, k = range keys {
 		_, err = tg.Do("expire", k, interval)
