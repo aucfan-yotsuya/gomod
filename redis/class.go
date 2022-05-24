@@ -214,6 +214,26 @@ func (tg *Target) HGetAllString(key string) (map[string]string, error) {
 	}
 	return m, nil
 }
+func (tg *Target) Lrange(Key string, Value ...string) ([][]byte, error) {
+	var resp [][]byte
+	if resp, err = redis.ByteSlices(tg.Do("lrange", Key, Value)); err != nil {
+		return [][]byte{}, err
+	}
+	return resp, nil
+}
+func (tg *Target) Dump(Key string) ([]byte, error) {
+	var resp []byte
+	if resp, err = redis.Bytes(tg.Do("dump", Key)); err != nil {
+		return []byte{}, err
+	}
+	return resp, nil
+}
+func (tg *Target) Restore(Key string, Value []byte) error {
+	if _, err = tg.Do("restore", Key, Value); err != nil {
+		return err
+	}
+	return nil
+}
 func (tg *Target) Keys(keyName string) ([]string, error) {
 	var rep []string
 	if rep, err = redis.Strings(tg.Do("keys", keyName)); err != nil {
