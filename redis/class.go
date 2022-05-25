@@ -123,7 +123,10 @@ func (tg *Target) GetConn() *Target {
 	return tg
 }
 func (tg *Target) Do(commandName string, args ...interface{}) (interface{}, error) {
-	if tg.GetConn(); tg.NilConn() {
+	if tg.NilConn() {
+		tg.GetConn()
+	}
+	if tg.NilConn() {
 		return nil, &Err{Message: "Conn has nil"}
 	}
 	return tg.Conn.Do(commandName, args...)
