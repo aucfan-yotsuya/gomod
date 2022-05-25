@@ -153,6 +153,18 @@ func (tg *Target) Lpush(Key string, Value ...[]byte) error {
 	}
 	return nil
 }
+func (tg *Target) RpushString(Key string, Value ...string) error {
+	if _, err = tg.Do("rpush", Key, Value); err != nil {
+		return err
+	}
+	return nil
+}
+func (tg *Target) Rpush(Key string, Value ...[]byte) error {
+	if _, err = tg.Do("rpush", Key, Value); err != nil {
+		return err
+	}
+	return nil
+}
 func (tg *Target) SetString(Key, Value string) error {
 	if _, err = tg.Do("set", Key, Value); err != nil {
 		return err
@@ -221,6 +233,13 @@ func (tg *Target) Lrange(Key string, Value ...string) ([][]byte, error) {
 	var resp [][]byte
 	if resp, err = redis.ByteSlices(tg.Do("lrange", Key, Value)); err != nil {
 		return [][]byte{}, err
+	}
+	return resp, nil
+}
+func (tg *Target) Llen(Key string) (int, error) {
+	var resp int
+	if resp, err = redis.Int(tg.Do("lrange", Key)); err != nil {
+		return 0, err
 	}
 	return resp, nil
 }
