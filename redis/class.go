@@ -251,13 +251,10 @@ func (tg *Target) GetExpire(key string) (int, error) {
 	}
 	return resp, nil
 }
-func (tg *Target) SetExpire(interval int, keys ...string) error {
-	var k string
-	for _, k = range keys {
-		_, err = tg.Do("expire", k, interval)
-		if err != nil {
-			return err
-		}
+func (tg *Target) SetExpire(key string, interval int) error {
+	_, err = tg.Do("expire", key, interval)
+	if err != nil {
+		return err
 	}
 	return nil
 }
