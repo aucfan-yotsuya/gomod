@@ -87,7 +87,11 @@ func (tg *Target) Do(ctx context.Context, query string, args ...interface{}) (sq
 func (tg *Target) Select(ctx context.Context, query string, args ...interface{}) ([]map[string][]byte, error) {
 	var r *sql.Rows
 	if r, err = tg.Conn.QueryContext(ctx, query, args...); err != nil {
-		return []map[string][]byte{}, &Err{Message: err.Error()}
+		if IsNoRows(err) {
+			return []map[string][]byte{}, err
+		} else {
+			return []map[string][]byte{}, &Err{Message: err.Error()}
+		}
 	}
 	defer r.Close()
 
