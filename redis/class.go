@@ -177,6 +177,12 @@ func (tg *Target) Set(Key string, Value []byte) error {
 	}
 	return nil
 }
+func (tg *Target) Get(Key string) ([]byte, error) {
+	return redis.Bytes(tg.Do("get", Key))
+}
+func (tg *Target) GetString(Key string) (string, error) {
+	return redis.String(tg.Do("get", Key))
+}
 func (tg *Target) HSetString(key string, keyValue map[string]string) error {
 	for k, v := range keyValue {
 		if _, err = tg.Do("hset", key, k, v); err != nil {
