@@ -5,48 +5,71 @@ import (
 	"testing"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
 
-func T_New(t *testing.T) {
-	r = New()
-	assert.NotNil(t, r)
-}
-func T_NewTarget(t *testing.T) {
-	var target = r.NewTarget()
-	assert.True(t, assert.ObjectsAreEqual(r.GetTarget(0), target))
-}
-func T_Close(t *testing.T) {
-	r.Close()
-	assert.Len(t, r.Target, 0)
-}
-func T_NewConn(t *testing.T) {
-	defer r.GetTarget(0).Close()
-	r.GetTarget(0).NewConn(&RedisConnOpt{
+const (
+	Master int = iota
+	Reader
+)
+
+func newConn() error {
+	return r.NewTarget().NewConn(&RedisConnOpt{
 		Protocol:   "tcp",
-		Address:    os.Getenv("TargetIP"),
+		Address:    os.Getenv("Target"),
 		RetryCount: 3,
 		Timeout:    10 * time.Second,
 	})
-	assert.Nil(t, err)
 }
-func T_NewPool(t *testing.T) {
-	defer r.Close()
-	r.GetTarget(0).NewPool(&RedisConnOpt{
+func newPool() {
+	r.NewTarget().NewPool(&RedisConnOpt{
 		Protocol:      "tcp",
-		Address:       os.Getenv("TargetIP"),
+		Address:       os.Getenv("Target"),
 		RetryCount:    3,
 		PoolMaxIdle:   3,
 		PoolMaxActive: 3,
 		Timeout:       10 * time.Second,
 	})
-	assert.False(t, assert.Nil(t, r.GetTarget(0).Pool))
+}
+
+func T_LaodEnv(t *testing.T) {
+	assert.NoError(t, godotenv.Load(".env"))
+}
+
+func T_New(t *testing.T) {
+	r = New()
+	assert.NotNil(t, r)
+}
+func T_Close(t *testing.T) {
+	assert.Len(t, r.Target, 1)
+	r.Close()
+	assert.Len(t, r.Target, 0)
+}
+func T_NewTarget(t *testing.T) {
+	defer r.Close()
+	var target = r.NewTarget()
+	assert.True(t, assert.ObjectsAreEqual(r.GetTarget(Master), target))
+}
+func T_NewConn(t *testing.T) {
+	defer r.Close()
+	newConn()
+	assert.Nil(t, err)
+}
+func T_NewPool(t *testing.T) {
+	defer r.Close()
+	newPool()
+	assert.False(t, assert.Nil(t, r.GetTarget(Master).Pool))
 }
 func T_Ping(t *testing.T) {
-	assert.True(t, r.GetTarget(0).GetConn().Ping())
+	defer r.Close()
+	newConn()
+	assert.True(t, r.GetTarget(Master).Ping())
 }
 func T_HSet(t *testing.T) {
-	assert.NoError(t, r.GetTarget(0).HSet(
+	defer r.Close()
+	newConn()
+	assert.NoError(t, r.GetTarget(Master).HSet(
 		"___hsetkey", map[string][]byte{
 			"key1": []byte("value1"),
 			"key2": []byte("value2"),
@@ -54,7 +77,9 @@ func T_HSet(t *testing.T) {
 		}))
 }
 func T_HSetString(t *testing.T) {
-	assert.NoError(t, r.GetTarget(0).HSetString(
+	defer r.Close()
+	newConn()
+	assert.NoError(t, r.GetTarget(Master).HSetString(
 		"___hsetstringkey", map[string]string{
 			"key1": "value1",
 			"key2": "value2",
@@ -62,26 +87,54 @@ func T_HSetString(t *testing.T) {
 		}))
 }
 func T_Expire(t *testing.T) {
-	assert.NoError(t, r.GetTarget(0).Expire(2, "___hsetkey", "___hsetstringkey"))
+	defer r.Close()
+	newConn()
+	assert.NoError(t, r.GetTarget(Master).SetExpire("___hsetkey", 2))
+	assert.NoError(t, r.GetTarget(Master).SetExpire("__hsetstringkey", 2))
 }
 func T_HGetAll(t *testing.T) {
+	defer r.Close()
+	newConn()
 	var kv map[string][]byte
-	kv, err = r.GetTarget(0).HGetAll("___hsetkey")
+	kv, err = r.GetTarget(Master).HGetAll("___hsetkey")
 	assert.NoError(t, err)
 	assert.EqualValues(t, kv["key1"], []byte("value1"))
-	kv, err = r.GetTarget(0).HGetAll("___hsetstringkey")
+	kv, err = r.GetTarget(Master).HGetAll("___hsetstringkey")
 	assert.NoError(t, err)
 	assert.EqualValues(t, kv["key1"], []byte("value1"))
 }
 func T_HIncrBy(t *testing.T) {
+	defer r.Close()
+	newConn()
 	var resp int
-	resp, err = r.GetTarget(0).HIncrBy("___hincby", "key1", 1)
+	resp, err = r.GetTarget(Master).HIncrBy("___hincby", "key1", 10)
 	assert.NoError(t, err)
 	assert.EqualValues(t, resp, 1)
-	resp, err = r.GetTarget(0).HIncrBy("___hincby", "key1", 2)
+	resp, err = r.GetTarget(Master).HIncrBy("___hincby", "key1", 20)
 	assert.NoError(t, err)
 	assert.EqualValues(t, resp, 3)
-	assert.NoError(t, r.GetTarget(0).Expire(2, "___hincrby"))
+	assert.NoError(t, r.GetTarget(Master).SetExpire("___hincrby", 20))
+}
+func T_Subscribe(t *testing.T) {
+	defer r.Close()
+	newConn()
+	r.GetTarget(Master).Subscribe("hoge")
+}
+func T_SetSelialize(t *testing.T) {
+	defer r.Close()
+	assert.NoError(t, newConn())
+	type (
+		Vector struct {
+			Num int
+			Val string
+		}
+	)
+	var vector = Vector{
+		Num: 1,
+		Val: "hoge",
+	}
+	assert.NoError(t, r.NewEncoder().Encode(vector))
+	assert.NoError(t, r.GetTarget(Master).Set("___selialize", r.ReadFromBuffer()))
 }
 func TestKeys(t *testing.T) {
 	//var keys []string

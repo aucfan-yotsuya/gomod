@@ -1,21 +1,33 @@
 package redis
 
 import (
+	"bytes"
 	"net"
 	"time"
+
+	"encoding/gob"
 
 	"github.com/gomodule/redigo/redis"
 )
 
 type (
 	Redis struct {
-		Target []*Target
+		Target  []*Target
+		Encoder *gob.Encoder
+		Decoder *gob.Decoder
 	}
 	Target struct {
-		Conn      redis.Conn
-		Pool      *redis.Pool
-		netConn   net.Conn
-		netDialer net.Dialer
+		Conn         redis.Conn
+		RedisConnOpt *RedisConnOpt
+		PubSubConn   *redis.PubSubConn
+		Pool         *redis.Pool
+		netConn      net.Conn
+		netDialer    net.Dialer
+		Buffer       *bytes.Buffer
+		NewEncoder   func() *Target
+		NewDecoder   func() *Target
+		Encode       func(interface{}) error
+		Decode       func(interface{}) error
 	}
 	RedisConnOpt struct {
 		Protocol, Address                      string

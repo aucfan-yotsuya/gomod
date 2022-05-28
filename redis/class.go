@@ -1,7 +1,10 @@
 package redis
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
+	"fmt"
 	"strings"
 	"time"
 
@@ -11,7 +14,13 @@ import (
 )
 
 func (r *Redis) NewTarget() *Target {
-	var tg = new(Target)
+	var tg = &Target{
+		Encode: r.Encode,
+		Decode: r.Decode,
+		Buffer: new(bytes.Buffer),
+	}
+	tg.NewEncoder = func() *Target { r.NewEncoder(tg.Buffer); return tg }
+	tg.NewDecoder = func() *Target { r.NewDecoder(tg.Buffer); return tg }
 	r.Target = append(r.Target, tg)
 	return tg
 }
@@ -68,6 +77,7 @@ func (t *Target) ResetRetryCount() bool {
 }
 func (tg *Target) NewConn(opt *RedisConnOpt) error {
 	defer tg.ResetRetryCount()
+	tg.RedisConnOpt = opt
 retryNetConn:
 	if tg.netConn, err = tg.netDialer.DialContext(
 		func() context.Context { ctx, _ := common.Context(opt.Timeout); return ctx }(),
@@ -111,11 +121,19 @@ func (tg *Target) NewPool(opt *RedisConnOpt) *Redis {
 	}
 	return r
 }
+func (tg *Target) NewPubSubConn() *redis.PubSubConn {
+	tg.GetConn()
+	tg.PubSubConn = &redis.PubSubConn{
+		Conn: tg.Conn,
+	}
+	return tg.PubSubConn
+}
 func (tg *Target) GetConn() *Target {
 	if tg.Pool == nil {
 		if tg.Conn == nil {
+			tg.NewConn(tg.RedisConnOpt)
 		} else if ok := tg.Ping(); !ok {
-			defer tg.Conn.Close()
+			tg.NewConn(tg.RedisConnOpt)
 		}
 	} else {
 		tg.Conn = tg.Pool.Get()
@@ -257,10 +275,8 @@ func (tg *Target) Dump(Key string) ([]byte, error) {
 	return resp, nil
 }
 func (tg *Target) Restore(Key string, Value []byte) error {
-	if _, err = tg.Do("restore", Key, Value); err != nil {
-		return err
-	}
-	return nil
+	_, err = tg.Do("restore", Key, Value)
+	return err
 }
 func (tg *Target) Keys(keyName string) ([]string, error) {
 	var rep []string
@@ -278,11 +294,35 @@ func (tg *Target) GetExpire(key string) (int, error) {
 }
 func (tg *Target) SetExpire(key string, interval int) error {
 	_, err = tg.Do("expire", key, interval)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 func (tg *Target) HIncrBy(Key string, Field string, Increment int) (int, error) {
 	return redis.Int(tg.Do("hincrby", Key, Field, Increment))
+}
+func (tg *Target) Publish(Channel, Message string) (int64, error) {
+	return redis.Int64(tg.Do("publish", Channel, Message))
+}
+func (r *Redis) NewEncoder(buffer *bytes.Buffer) *Redis {
+	r.Encoder = gob.NewEncoder(buffer)
+	return r
+}
+func (r *Redis) NewDecoder(buffer *bytes.Buffer) *Redis {
+	r.Decoder = gob.NewDecoder(buffer)
+	return r
+}
+func (tg *Target) NewBuffer(data []byte) *Redis {
+	tg.Buffer = bytes.NewBuffer(data)
+	return r
+}
+func (r *Redis) Encode(Struct interface{}) error {
+	return r.Encoder.Encode(Struct)
+}
+func (r *Redis) Decode(Struct interface{}) error {
+	return r.Decoder.Decode(Struct)
+}
+func (tg *Target) WriteToBuffer(data []byte) (int, error) {
+	return fmt.Fprintln(tg.Buffer, data)
+}
+func (tg *Target) ReadFromBuffer() []byte {
+	return tg.Buffer.Bytes()
 }
