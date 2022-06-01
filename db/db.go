@@ -11,9 +11,10 @@ type (
 		Target []*Target
 	}
 	Target struct {
-		Conn   *sql.DB
-		Tx     *sql.Tx
-		Insert func(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+		Conn     *sql.DB
+		Tx       *sql.Tx
+		Insert   func(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+		InsertTx func(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	}
 	DbConnOpt struct {
 		Driver, Dsn                                       string
