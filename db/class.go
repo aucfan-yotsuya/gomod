@@ -9,6 +9,7 @@ import (
 
 func (d *DB) NewTarget() *Target {
 	var tg = new(Target)
+	tg.Insert = tg.Do
 	d.Target = append(d.Target, tg)
 	return tg
 }
@@ -79,7 +80,14 @@ func (tg *Target) Rollback() error {
 }
 func (tg *Target) Do(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	var r sql.Result
-	if r, err = tg.Conn.ExecContext(ctx, query, args); err != nil {
+	if r, err = tg.Conn.ExecContext(ctx, query, args...); err != nil {
+		return r, &Err{Message: err.Error()}
+	}
+	return r, nil
+}
+func (tg *Target) DoTx(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	var r sql.Result
+	if r, err = tg.Tx.ExecContext(ctx, query, args...); err != nil {
 		return r, &Err{Message: err.Error()}
 	}
 	return r, nil
@@ -121,16 +129,16 @@ func (tg *Target) Select(ctx context.Context, query string, args ...interface{})
 	}
 	return rows, nil
 }
-func (tg *Target) Insert(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (tg *Target) BulkInsert(ctx context.Context, query string, args []interface{}) (sql.Result, error) {
 	var r sql.Result
 	if r, err = tg.Conn.ExecContext(ctx, query, args...); err != nil {
 		return r, &Err{Message: err.Error()}
 	}
 	return r, nil
 }
-func (tg *Target) BulkInsert(ctx context.Context, query string, args []interface{}) (sql.Result, error) {
+func (tg *Target) BulkInsertTx(ctx context.Context, query string, args []interface{}) (sql.Result, error) {
 	var r sql.Result
-	if r, err = tg.Conn.ExecContext(ctx, query, args...); err != nil {
+	if r, err = tg.Tx.ExecContext(ctx, query, args...); err != nil {
 		return r, &Err{Message: err.Error()}
 	}
 	return r, nil
