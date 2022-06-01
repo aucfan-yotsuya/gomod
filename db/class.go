@@ -10,7 +10,7 @@ import (
 func (d *DB) NewTarget() *Target {
 	var tg = new(Target)
 	tg.Insert = tg.Do
-	tg.InsertTx = tg.Dotx
+	tg.InsertTx = tg.DoTx
 	d.Target = append(d.Target, tg)
 	return tg
 }
