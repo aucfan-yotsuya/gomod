@@ -17,17 +17,18 @@ type (
 		Decoder *gob.Decoder
 	}
 	Target struct {
-		Conn         redis.Conn
 		RedisConnOpt *RedisConnOpt
 		PubSubConn   *redis.PubSubConn
 		Pool         *redis.Pool
-		netConn      net.Conn
 		netDialer    net.Dialer
 		Buffer       *bytes.Buffer
 		NewEncoder   func() *Target
 		NewDecoder   func() *Target
 		Encode       func(interface{}) error
 		Decode       func(interface{}) error
+	}
+	Conn struct {
+		redis.Conn
 	}
 	RedisConnOpt struct {
 		Protocol, Address                      string
@@ -45,6 +46,5 @@ var (
 	timeout       time.Duration
 )
 
-func New() *Redis {
-	return new(Redis)
-}
+func New() *Redis    { return new(Redis) }
+func NewConn() *Conn { return new(Conn) }
