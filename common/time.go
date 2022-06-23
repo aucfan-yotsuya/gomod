@@ -8,7 +8,5 @@ func ParseDuration(s string) time.Duration {
 	return d
 }
 func NowJST() time.Time {
-	var jst *time.Location
-	jst, _ = time.LoadLocation("Asia/Tokyo")
-	return time.Now().In(jst)
+	return time.Now().In(time.FixedZone("JST", 9*60*60))
 }
