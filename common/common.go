@@ -12,6 +12,12 @@ func Pstring(str string) *string {
 func PstringSlice(strSlice []string) *[]string {
 	return &strSlice
 }
+func Pint(i int) *int {
+	return &i
+}
+func PintSlice(intSlice []int) *[]int {
+	return &intSlice
+}
 func Preader(reader io.Reader) *io.Reader {
 	return &reader
 }
