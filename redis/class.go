@@ -255,8 +255,8 @@ func (c *Conn) Dump(Key string) ([]byte, error) {
 	}
 	return resp, nil
 }
-func (c *Conn) Restore(Key string, Value []byte) error {
-	_, err = c.Do("restore", Key, Value)
+func (c *Conn) Restore(Key string, TTL int, Value []byte) error {
+	_, err = c.Do("restore", Key, TTL, Value)
 	return err
 }
 func (c *Conn) Keys(keyName string) ([]string, error) {
