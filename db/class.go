@@ -93,6 +93,17 @@ func (tg *Target) DoTx(ctx context.Context, query string, args ...interface{}) (
 	}
 	return r, nil
 }
+func (tg *Target) Query(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	var r *sql.Rows
+	if r, err = tg.Conn.QueryContext(ctx, query, args...); err != nil {
+		if IsNoRows(err) {
+			return r, err
+		} else {
+			return r, &Err{Message: err.Error()}
+		}
+	}
+	return r, nil
+}
 func (tg *Target) Select(ctx context.Context, query string, args ...interface{}) ([]map[string][]byte, error) {
 	var r *sql.Rows
 	if r, err = tg.Conn.QueryContext(ctx, query, args...); err != nil {
