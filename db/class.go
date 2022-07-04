@@ -45,6 +45,9 @@ func (tg *Target) Close() {
 func (tg *Target) NewGorm(dialector gorm.Dialector, opts gorm.Option) (*gorm.DB, error) {
 	g, err := gorm.Open(dialector, opts)
 	tg.Gorm = g
+	if d, err := g.DB(); err == nil {
+		tg.Conn = d
+	}
 	return g, err
 }
 func (tg *Target) NewConn(opt *DbConnOpt) error {
