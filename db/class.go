@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"gorm.io/gorm"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -14,8 +16,7 @@ func (d *DB) NewTarget() *Target {
 	d.Target = append(d.Target, tg)
 	return tg
 }
-func (d *DB) NilRedis(index int) bool { return d.Target[index] == nil }
-func (d *DB) TargetLen() int          { return len(d.Target) }
+func (d *DB) TargetLen() int { return len(d.Target) }
 func (d *DB) GetTarget(index int) *Target {
 	if d.TargetLen() < 1 {
 		return nil
@@ -40,6 +41,11 @@ func (tg *Target) Close() {
 		tg.Conn.Close()
 		tg.Conn = nil
 	}
+}
+func (tg *Target) NewGorm(dialector gorm.Dialector, opts gorm.Option) (*gorm.DB, error) {
+	g, err := gorm.Open(dialector, opts)
+	tg.Gorm = g
+	return g, err
 }
 func (tg *Target) NewConn(opt *DbConnOpt) error {
 	if tg.Conn, err = sql.Open(opt.Driver, opt.Dsn); err != nil {

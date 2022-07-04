@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type (
@@ -11,6 +13,7 @@ type (
 		Target []*Target
 	}
 	Target struct {
+		Gorm     *gorm.DB
 		Conn     *sql.DB
 		Tx       *sql.Tx
 		Insert   func(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
