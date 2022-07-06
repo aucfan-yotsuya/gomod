@@ -14,16 +14,16 @@ const (
 	Reader
 )
 
-func newConn() error {
-	return r.NewTarget().NewConn(&RedisConnOpt{
+func newConn() (*Conn, error) {
+return r.NewTarget().NewConn(&RedisConnOpt{
 		Protocol:   "tcp",
 		Address:    os.Getenv("Target"),
 		RetryCount: 3,
 		Timeout:    10 * time.Second,
 	})
 }
-func newPool() {
-	r.NewTarget().NewPool(&RedisConnOpt{
+func newPool() *Conn {
+	return r.NewTarget().NewPool(&RedisConnOpt{
 		Protocol:      "tcp",
 		Address:       os.Getenv("Target"),
 		RetryCount:    3,
@@ -36,7 +36,6 @@ func newPool() {
 func T_LaodEnv(t *testing.T) {
 	assert.NoError(t, godotenv.Load(".env"))
 }
-
 func T_New(t *testing.T) {
 	r = New()
 	assert.NotNil(t, r)
@@ -53,7 +52,7 @@ func T_NewTarget(t *testing.T) {
 }
 func T_NewConn(t *testing.T) {
 	defer r.Close()
-	newConn()
+	newConn(),
 	assert.Nil(t, err)
 }
 func T_NewPool(t *testing.T) {

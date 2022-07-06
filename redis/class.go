@@ -202,7 +202,7 @@ func (c *Conn) HGetAll(key string) (map[string][]byte, error) {
 	var (
 		rep [][]byte
 		k   string
-		m   = make(map[string][]byte)
+		m   = map[string][]byte{}
 	)
 	if rep, err = redis.ByteSlices(c.Do("hgetall", key)); err != nil {
 		return make(map[string][]byte), err
@@ -220,10 +220,10 @@ func (c *Conn) HGetAllString(key string) (map[string]string, error) {
 	var (
 		rep [][]byte
 		k   string
-		m   = make(map[string]string)
+		m   = map[string]string{}
 	)
 	if rep, err = redis.ByteSlices(c.Do("hgetall", key)); err != nil {
-		return make(map[string]string), err
+		return m, err
 	}
 	for i, v := range rep {
 		if common.Number(i).Even() {
