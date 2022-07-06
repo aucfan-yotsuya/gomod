@@ -17,6 +17,7 @@ type (
 		Decoder *gob.Decoder
 	}
 	Target struct {
+		Available    bool
 		RedisConnOpt *RedisConnOpt
 		PubSubConn   *redis.PubSubConn
 		Pool         *redis.Pool

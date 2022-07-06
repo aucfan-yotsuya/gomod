@@ -16,9 +16,10 @@ import (
 
 func (r *Redis) NewTarget() *Target {
 	var tg = &Target{
-		Encode: r.Encode,
-		Decode: r.Decode,
-		Buffer: new(bytes.Buffer),
+		Encode:    r.Encode,
+		Decode:    r.Decode,
+		Buffer:    new(bytes.Buffer),
+		Available: true,
 	}
 	tg.NewEncoder = func() *Target { r.NewEncoder(tg.Buffer); return tg }
 	tg.NewDecoder = func() *Target { r.NewDecoder(tg.Buffer); return tg }
@@ -41,7 +42,7 @@ func (r *Redis) ResetRetryCount() bool {
 }
 func (r *Redis) GetTarget(index int) *Target {
 	if r.TargetLen() < index+1 {
-		return nil
+		return new(Target)
 	}
 	return r.Target[index]
 }
@@ -126,6 +127,9 @@ func (tg *Target) NewPubSubConn() *redis.PubSubConn {
 }
 func (tg *Target) GetConn() *Conn {
 	var conn = new(Conn)
+	if !tg.Available {
+		return conn
+	}
 	if tg.Pool == nil {
 		conn, _ = tg.NewConn(tg.RedisConnOpt)
 	} else {
@@ -177,10 +181,18 @@ func (c *Conn) Set(Key string, Value []byte) error {
 	return nil
 }
 func (c *Conn) Get(Key string) ([]byte, error) {
-	return redis.Bytes(c.Do("get", Key))
+	resp, err := redis.Bytes(c.Do("get", Key))
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
 }
 func (c *Conn) GetString(Key string) (string, error) {
-	return redis.String(c.Do("get", Key))
+	resp, err := redis.String(c.Do("get", Key))
+	if err != nil {
+		return "", err
+	}
+	return resp, nil
 }
 func (c *Conn) HSetString(key string, keyValue map[string]string) error {
 	for k, v := range keyValue {
@@ -205,7 +217,7 @@ func (c *Conn) HGetAll(key string) (map[string][]byte, error) {
 		m   = map[string][]byte{}
 	)
 	if rep, err = redis.ByteSlices(c.Do("hgetall", key)); err != nil {
-		return make(map[string][]byte), err
+		return m, err
 	}
 	for i, v := range rep {
 		if common.Number(i).Even() {
@@ -244,7 +256,7 @@ func (c *Conn) Lrange(Key string, Value ...string) ([][]byte, error) {
 func (c *Conn) Llen(Key string) (int, error) {
 	var resp int
 	if resp, err = redis.Int(c.Do("lrange", Key)); err != nil {
-		return 0, err
+		return -1, err
 	}
 	return resp, nil
 }
@@ -256,8 +268,10 @@ func (c *Conn) Dump(Key string) ([]byte, error) {
 	return resp, nil
 }
 func (c *Conn) Restore(Key string, TTL int, Value []byte) error {
-	_, err = c.Do("restore", Key, TTL, Value)
-	return err
+	if _, err = c.Do("restore", Key, TTL, Value); err != nil {
+		return err
+	}
+	return nil
 }
 func (c *Conn) Keys(keyName string) ([]string, error) {
 	var rep []string
@@ -269,19 +283,29 @@ func (c *Conn) Keys(keyName string) ([]string, error) {
 func (c *Conn) GetExpire(key string) (int, error) {
 	var resp int
 	if resp, err = redis.Int(c.Do("ttl", key)); err != nil {
-		return 0, err
+		return -1, err
 	}
 	return resp, nil
 }
 func (c *Conn) SetExpire(key string, interval int) error {
-	_, err = c.Do("expire", key, interval)
-	return err
+	if _, err = c.Do("expire", key, interval); err != nil {
+		return err
+	}
+	return nil
 }
 func (c *Conn) HIncrBy(Key string, Field string, Increment int) (int, error) {
-	return redis.Int(c.Do("hincrby", Key, Field, Increment))
+	resp, err := redis.Int(c.Do("hincrby", Key, Field, Increment))
+	if err != nil {
+		return -1, err
+	}
+	return resp, nil
 }
 func (c *Conn) Publish(Channel, Message string) (int64, error) {
-	return redis.Int64(c.Do("publish", Channel, Message))
+	resp, err := redis.Int64(c.Do("publish", Channel, Message))
+	if err != nil {
+		return -1, err
+	}
+	return resp, nil
 }
 func (r *Redis) NewEncoder(buffer *bytes.Buffer) *Redis {
 	r.Encoder = gob.NewEncoder(buffer)
