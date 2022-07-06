@@ -40,7 +40,7 @@ func (r *Redis) ResetRetryCount() bool {
 	return true
 }
 func (r *Redis) GetTarget(index int) *Target {
-	if r.TargetLen() < 1 {
+	if r.TargetLen() < index+1 {
 		return nil
 	}
 	return r.Target[index]
