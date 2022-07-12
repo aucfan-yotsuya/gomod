@@ -7,7 +7,7 @@ func UniqueStringSlice(str []string) []string {
 	)
 	for _, v := range str {
 		if _, ok := ent[v]; !ok {
-			enc[v] = true
+			ent[v] = true
 			unq = append(unq, v)
 		}
 	}
