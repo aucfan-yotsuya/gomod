@@ -26,7 +26,7 @@ type (
 		Sockfile                  string
 		Debug                     Debug
 	}
-	GetOpt struct {
+	Opt struct {
 		Url    *string
 		Body   *io.Reader
 		Header *[]string
@@ -58,10 +58,130 @@ func New(timeout time.Duration) *HTTP {
 	h.Timeout = timeout
 	return h
 }
-func Get(h *HTTP, opt *GetOpt) (Response, error) {
+func GET(h *HTTP, opt *Opt) (Response, error) {
 	defer h.Close()
 	if err = h.BeforeRequest(&Request{
 		Method: common.Pstring("GET"),
+		Url:    opt.Url,
+		Body:   opt.Body,
+		Header: opt.Header,
+	}); err != nil {
+		return Response{}, err
+	}
+	if h.Debug.Request > DebugNone {
+		var b []byte
+		if b, err = h.DumpRequest(); err != nil {
+			return Response{}, err
+		}
+		fmt.Fprintf(os.Stderr, string(b))
+	}
+	if err = h.NewClient().Do(); err != nil {
+		return Response{}, err
+	}
+	if h.Debug.Response > DebugNone {
+		var b []byte
+		if b, err = h.DumpResponse(); err != nil {
+			return Response{}, err
+		}
+		fmt.Fprintf(os.Stderr, string(b))
+	}
+
+	defer h.Response.Body.Close()
+	var response []byte
+	if response, err = h.ReadAllResponse(); err != nil {
+		return Response{}, err
+	}
+
+	return Response{
+		StatusCode: h.Response.StatusCode,
+		Header:     h.Response.Header,
+		Body:       response,
+	}, nil
+}
+func POST(h *HTTP, opt *Opt) (Response, error) {
+	defer h.Close()
+	if err = h.BeforeRequest(&Request{
+		Method: common.Pstring("POST"),
+		Url:    opt.Url,
+		Body:   opt.Body,
+		Header: opt.Header,
+	}); err != nil {
+		return Response{}, err
+	}
+	if h.Debug.Request > DebugNone {
+		var b []byte
+		if b, err = h.DumpRequest(); err != nil {
+			return Response{}, err
+		}
+		fmt.Fprintf(os.Stderr, string(b))
+	}
+	if err = h.NewClient().Do(); err != nil {
+		return Response{}, err
+	}
+	if h.Debug.Response > DebugNone {
+		var b []byte
+		if b, err = h.DumpResponse(); err != nil {
+			return Response{}, err
+		}
+		fmt.Fprintf(os.Stderr, string(b))
+	}
+
+	defer h.Response.Body.Close()
+	var response []byte
+	if response, err = h.ReadAllResponse(); err != nil {
+		return Response{}, err
+	}
+
+	return Response{
+		StatusCode: h.Response.StatusCode,
+		Header:     h.Response.Header,
+		Body:       response,
+	}, nil
+}
+func PUT(h *HTTP, opt *Opt) (Response, error) {
+	defer h.Close()
+	if err = h.BeforeRequest(&Request{
+		Method: common.Pstring("PUT"),
+		Url:    opt.Url,
+		Body:   opt.Body,
+		Header: opt.Header,
+	}); err != nil {
+		return Response{}, err
+	}
+	if h.Debug.Request > DebugNone {
+		var b []byte
+		if b, err = h.DumpRequest(); err != nil {
+			return Response{}, err
+		}
+		fmt.Fprintf(os.Stderr, string(b))
+	}
+	if err = h.NewClient().Do(); err != nil {
+		return Response{}, err
+	}
+	if h.Debug.Response > DebugNone {
+		var b []byte
+		if b, err = h.DumpResponse(); err != nil {
+			return Response{}, err
+		}
+		fmt.Fprintf(os.Stderr, string(b))
+	}
+
+	defer h.Response.Body.Close()
+	var response []byte
+	if response, err = h.ReadAllResponse(); err != nil {
+		return Response{}, err
+	}
+
+	return Response{
+		StatusCode: h.Response.StatusCode,
+		Header:     h.Response.Header,
+		Body:       response,
+	}, nil
+}
+func DELETE(h *HTTP, opt *Opt) (Response, error) {
+	defer h.Close()
+	if err = h.BeforeRequest(&Request{
+		Method: common.Pstring("DELETE"),
 		Url:    opt.Url,
 		Body:   opt.Body,
 		Header: opt.Header,
