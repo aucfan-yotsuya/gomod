@@ -144,25 +144,25 @@ func (c *Conn) Ping() bool {
 	}
 	return strings.Compare(rep, "PONG") == 0
 }
-func (c *Conn) LpushString(Key string, Value ...string) error {
+func (c *Conn) LpushString(Key string, Value string) error {
 	if _, err = c.Do("lpush", Key, Value); err != nil {
 		return err
 	}
 	return nil
 }
-func (c *Conn) Lpush(Key string, Value ...[]byte) error {
+func (c *Conn) Lpush(Key string, Value []byte) error {
 	if _, err = c.Do("lpush", Key, Value); err != nil {
 		return err
 	}
 	return nil
 }
-func (c *Conn) RpushString(Key string, Value ...string) error {
+func (c *Conn) RpushString(Key string, Value string) error {
 	if _, err = c.Do("rpush", Key, Value); err != nil {
 		return err
 	}
 	return nil
 }
-func (c *Conn) Rpush(Key string, Value ...[]byte) error {
+func (c *Conn) Rpush(Key string, Value []byte) error {
 	if _, err = c.Do("rpush", Key, Value); err != nil {
 		return err
 	}
@@ -193,6 +193,12 @@ func (c *Conn) GetString(Key string) (string, error) {
 		return "", err
 	}
 	return resp, nil
+}
+func (c *Conn) Del(Key string) error {
+	if _, err := c.Do("del", Key); err != nil {
+		return err
+	}
+	return nil
 }
 func (c *Conn) HSetString(key string, keyValue map[string]string) error {
 	for k, v := range keyValue {
