@@ -5,16 +5,7 @@ import (
 	"time"
 )
 
-func RandomSlice(sl []interface{}) []interface{} {
-	var resp []interface{}
-	for {
-		rand.Seed(time.Now().UnixNano())
-		n = rand.Intn(len(sl))
-		resp = append(resp, sl[n])
-		sl = append(sl[:n], sl[n+1:]...)
-		if len(sl) < 1 {
-			break
-		}
-	}
-	return resp
+func Shuffle(sl []interface{}) []interface{} {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Shuffle(len(sl), func(i, j int) { sl[i], sl[j] = sl[j], sl[i] })
 }
