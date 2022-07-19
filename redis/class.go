@@ -252,9 +252,9 @@ func (c *Conn) HGetAllString(key string) (map[string]string, error) {
 	}
 	return m, nil
 }
-func (c *Conn) Lrange(Key string, Value ...string) ([][]byte, error) {
+func (c *Conn) Lrange(Key string, Start, End int) ([][]byte, error) {
 	var resp [][]byte
-	if resp, err = redis.ByteSlices(c.Do("lrange", Key, Value)); err != nil {
+	if resp, err = redis.ByteSlices(c.Do("lrange", Key, Start, End)); err != nil {
 		return [][]byte{}, err
 	}
 	return resp, nil
