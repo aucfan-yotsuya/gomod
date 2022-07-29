@@ -1,11 +1,11 @@
 package common
 
-func UniqueStringSlice(str []string) []string {
+func UniqueStringSlice(stringSlice []string) []string {
 	var (
 		unq []string
 		ent = map[string]bool{}
 	)
-	for _, v := range str {
+	for _, v := range stringSlice {
 		if _, ok := ent[v]; !ok {
 			ent[v] = true
 			unq = append(unq, v)
