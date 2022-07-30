@@ -18,6 +18,14 @@ func NextMonth() time.Time {
 		time.FixedZone("JST", 9*3600),
 	).AddDate(0, 1, 0)
 }
+func PrevMonth() time.Time {
+	var n = NowJST()
+	return time.Date(
+		n.Year(), n.Month(), n.Day(),
+		0, 0, 0, 0,
+		time.FixedZone("JST", 9*3600),
+	).AddDate(0, -1, 0)
+}
 func NextMonthFirstDay() time.Time {
 	var n = NowJST()
 	return time.Date(
@@ -25,4 +33,12 @@ func NextMonthFirstDay() time.Time {
 		0, 0, 0, 0,
 		time.FixedZone("JST", 9*3600),
 	).AddDate(0, 1, 0)
+}
+func PrevMonthFirstDay() time.Time {
+	var n = NowJST()
+	return time.Date(
+		n.Year(), n.Month(), 1,
+		0, 0, 0, 0,
+		time.FixedZone("JST", 9*3600),
+	).AddDate(0, -1, 0)
 }
