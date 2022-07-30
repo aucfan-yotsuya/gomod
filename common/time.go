@@ -10,6 +10,14 @@ func ParseDuration(s string) time.Duration {
 func NowJST() time.Time {
 	return time.Now().In(time.FixedZone("JST", 9*3600))
 }
+func NextMonth() time.Time {
+	var n = NowJST()
+	return time.Date(
+		n.Year(), n.Month(), n.Day(),
+		0, 0, 0, 0,
+		time.FixedZone("JST", 9*3600),
+	).AddDate(0, 1, 0)
+}
 func NextMonthFirstDay() time.Time {
 	var n = NowJST()
 	return time.Date(
