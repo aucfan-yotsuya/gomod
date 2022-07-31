@@ -43,3 +43,30 @@ func TestPrevMonth(t *testing.T) {
 		time.FixedZone("JST", 9*3600),
 	))
 }
+func TestCalcYearMonth(t *testing.T) {
+	{
+		n := time.Date(
+			2022, 03, 30, 0, 0, 0, 0, time.FixedZone("JST", 9*3600),
+		)
+		assert.Equal(t, CalcYearMonth(n, 1), "202203")
+		assert.Equal(t, CalcYearMonth(n, 29), "202203")
+	}
+	{
+		n := time.Date(
+			2020, 02, 29, 0, 0, 0, 0, time.FixedZone("JST", 9*3600),
+		)
+		assert.Equal(t, CalcYearMonth(n, 1), "202002")
+		assert.Equal(t, CalcYearMonth(n, 28), "202002")
+		assert.Equal(t, CalcYearMonth(n, 29), "202002")
+		assert.Equal(t, CalcYearMonth(n, 30), "202001")
+		assert.Equal(t, CalcYearMonth(n, 31), "202001")
+	}
+	{
+		n := time.Date(
+			2020, 01, 30, 0, 0, 0, 0, time.FixedZone("JST", 9*3600),
+		)
+		assert.Equal(t, CalcYearMonth(n, 29), "202001")
+		assert.Equal(t, CalcYearMonth(n, 30), "202001")
+		assert.Equal(t, CalcYearMonth(n, 31), "201912")
+	}
+}
