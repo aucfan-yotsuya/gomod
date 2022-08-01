@@ -13,7 +13,6 @@ type (
 		Pool     *dockertest.Pool
 		Resource *dockertest.Resource
 		Gorm     *gorm.DB
-		// Container *dockertest.Container
 	}
 	Opt struct {
 		Endpoint         string
