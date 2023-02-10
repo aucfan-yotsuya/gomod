@@ -4,10 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/json"
-	"log"
 	"testing"
-
-	myconfig "rebill/config"
 
 	"github.com/aucfan-yotsuya/gomod/common"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -15,13 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var c *myconfig.Config
+var deliveryStreamName = "yotsuya-gmo"
 
 func TestMain(m *testing.M) {
-	c = new(myconfig.Config)
-	if err := myconfig.LoadConfig(common.Pstring("../toml/development.toml"), c); err != nil {
-		log.Fatal(err)
-	}
 	m.Run()
 }
 func TestPutRecord(t *testing.T) {
@@ -29,7 +22,7 @@ func TestPutRecord(t *testing.T) {
 		"key": "バイナリデータ",
 	})
 	assert.NoError(t, err)
-	err = PutRecord(common.Pstring("yotsuya-gmo"), c, &b)
+	err = PutRecord(&deliveryStreamName, &b)
 	assert.NoError(t, err)
 }
 func TestPutRecordWithConfig(t *testing.T) {
@@ -48,7 +41,7 @@ func TestPutRecordWithConfig(t *testing.T) {
 			"memberID": "xxx",
 		})
 		assert.NoError(t, err)
-		err = PutRecordWithConfig(cfg, c, &b)
+		err = PutRecordWithConfig(cfg, &deliveryStreamName, &b)
 		assert.NoError(t, err)
 	}
 	{
@@ -61,7 +54,7 @@ func TestPutRecordWithConfig(t *testing.T) {
 			"ErrInfo": "EX1000302",
 		})
 		assert.NoError(t, err)
-		err = PutRecordWithConfig(cfg, c, &b)
+		err = PutRecordWithConfig(cfg, &deliveryStreamName, &b)
 	}
 	{
 		b, err := json.Marshal(map[string]interface{}{
@@ -73,7 +66,7 @@ func TestPutRecordWithConfig(t *testing.T) {
 			"ErrInfo": "EX1000302",
 		})
 		assert.NoError(t, err)
-		err = PutRecordWithConfig(cfg, c, &b)
+		err = PutRecordWithConfig(cfg, &deliveryStreamName, &b)
 	}
 	t.Log(tm.Format("20060102"), "time")
 }
