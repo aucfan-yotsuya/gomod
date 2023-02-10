@@ -27,7 +27,7 @@ func PutRecordWithConfig(cfg aws.Config, deliveryStreamName *string, data *[]byt
 	_, err := f.PutRecord(context.TODO(), &firehose.PutRecordInput{
 		DeliveryStreamName: deliveryStreamName,
 		Record: &types.Record{
-			Data: *data,
+			Data: append(*data, []byte("\n")...),
 		},
 	})
 	if err != nil {
