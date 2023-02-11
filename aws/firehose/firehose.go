@@ -11,7 +11,7 @@ import (
 
 func PutRecord(deliveryStreamName *string, data *[]byte, cfg ...aws.Config) error {
 	var f *firehose.Client
-	if cfg == nil {
+	if len(cfg) == 0 {
 		f = firehose.New(firehose.Options{})
 	} else {
 		f = firehose.NewFromConfig(cfg[0])
