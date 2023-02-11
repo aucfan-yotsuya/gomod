@@ -9,25 +9,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/firehose/types"
 )
 
-func PutRecord(deliveryStreamName *string, data *[]byte) error {
-	f := firehose.New(firehose.Options{})
+func PutRecord(deliveryStreamName *string, data *[]byte, cfg ...aws.Config) error {
+	var f *firehose.Client
+	if cfg == nil {
+		f = firehose.New(firehose.Options{})
+	} else {
+		f = firehose.NewFromConfig(cfg[0])
+	}
 	_, err := f.PutRecord(context.TODO(), &firehose.PutRecordInput{
 		DeliveryStreamName: deliveryStreamName,
 		Record: &types.Record{
 			Data: *data,
-		},
-	})
-	if err != nil {
-		return errors.New("firehose putRecord: " + err.Error())
-	}
-	return nil
-}
-func PutRecordWithConfig(cfg aws.Config, deliveryStreamName *string, data *[]byte) error {
-	f := firehose.NewFromConfig(cfg)
-	_, err := f.PutRecord(context.TODO(), &firehose.PutRecordInput{
-		DeliveryStreamName: deliveryStreamName,
-		Record: &types.Record{
-			Data: append(*data, []byte("\n")...),
 		},
 	})
 	if err != nil {

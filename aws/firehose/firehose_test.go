@@ -41,7 +41,7 @@ func TestPutRecordWithConfig(t *testing.T) {
 			"memberID": "xxx",
 		})
 		assert.NoError(t, err)
-		err = PutRecordWithConfig(cfg, &deliveryStreamName, &b)
+		err = PutRecord(&deliveryStreamName, &b, cfg)
 		assert.NoError(t, err)
 	}
 	{
@@ -54,7 +54,7 @@ func TestPutRecordWithConfig(t *testing.T) {
 			"ErrInfo": "EX1000302",
 		})
 		assert.NoError(t, err)
-		err = PutRecordWithConfig(cfg, &deliveryStreamName, &b)
+		err = PutRecord(&deliveryStreamName, &b, cfg)
 	}
 	{
 		b, err := json.Marshal(map[string]interface{}{
@@ -66,7 +66,7 @@ func TestPutRecordWithConfig(t *testing.T) {
 			"ErrInfo": "EX1000302",
 		})
 		assert.NoError(t, err)
-		err = PutRecordWithConfig(cfg, &deliveryStreamName, &b)
+		err = PutRecord(&deliveryStreamName, &b, cfg)
 	}
 	t.Log(tm.Format("20060102"), "time")
 }
