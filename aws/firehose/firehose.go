@@ -19,7 +19,7 @@ func PutRecord(deliveryStreamName *string, data *[]byte, cfg ...aws.Config) erro
 	_, err := f.PutRecord(context.TODO(), &firehose.PutRecordInput{
 		DeliveryStreamName: deliveryStreamName,
 		Record: &types.Record{
-			Data: append(*data, []byte("\n")),
+			Data: append(*data, []byte("\n")...),
 		},
 	})
 	if err != nil {
