@@ -26,9 +26,9 @@ func TestPutRecord(t *testing.T) {
 	assert.NoError(t, err)
 }
 func TestPutRecordWithConfig(t *testing.T) {
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile("test"))
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile("test"), config.WithRegion("ap-northeast-1"))
+	t.Logf("%#v", cfg.Region)
 	assert.NoError(t, err)
-	cfg.Region = "ap-northeast-1"
 	tm := common.NowJST()
 	ulidStr := ulid.MustNew(ulid.Now(), rand.Reader).String()
 	{
@@ -71,21 +71,20 @@ func TestPutRecordWithConfig(t *testing.T) {
 	t.Log(tm.Format("20060102"), "time")
 }
 func TestPutRecordBatch(t *testing.T) {
-	var bs []*[]byte
+	var bs [][]byte
 	b, err := json.Marshal(map[string]interface{}{
 		"key": "バイナリデータ",
 	})
 	for i := 0; i < 500; i++ {
-		bs = append(bs, &b)
+		bs = append(bs, b)
 	}
 	assert.NoError(t, err)
-	err = PutRecordBatch(&deliveryStreamName, bs)
+	err = PutRecordBatch(&deliveryStreamName, &bs)
 	assert.NoError(t, err)
 }
 func TestPutRecordBatchWithConfig(t *testing.T) {
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile("test"))
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile("test"), config.WithRegion("ap-northeast-1"))
 	assert.NoError(t, err)
-	cfg.Region = "ap-northeast-1"
 	tm := common.NowJST()
 	ulidStr := ulid.MustNew(ulid.Now(), rand.Reader).String()
 	{
@@ -98,11 +97,11 @@ func TestPutRecordBatchWithConfig(t *testing.T) {
 			"memberID": "xxx",
 		})
 		assert.NoError(t, err)
-		var bs []*[]byte
+		var bs [][]byte
 		for i := 0; i < 500; i++ {
-			bs = append(bs, &b)
+			bs = append(bs, b)
 		}
-		err = PutRecordBatch(&deliveryStreamName, bs, cfg)
+		err = PutRecordBatch(&deliveryStreamName, &bs, cfg)
 		assert.NoError(t, err)
 	}
 	{
@@ -115,11 +114,11 @@ func TestPutRecordBatchWithConfig(t *testing.T) {
 			"ErrInfo": "EX500302",
 		})
 		assert.NoError(t, err)
-		var bs []*[]byte
+		var bs [][]byte
 		for i := 0; i < 500; i++ {
-			bs = append(bs, &b)
+			bs = append(bs, b)
 		}
-		err = PutRecordBatch(&deliveryStreamName, bs, cfg)
+		err = PutRecordBatch(&deliveryStreamName, &bs, cfg)
 	}
 	{
 		b, err := json.Marshal(map[string]interface{}{
@@ -131,11 +130,11 @@ func TestPutRecordBatchWithConfig(t *testing.T) {
 			"ErrInfo": "EX500302",
 		})
 		assert.NoError(t, err)
-		var bs []*[]byte
+		var bs [][]byte
 		for i := 0; i < 500; i++ {
-			bs = append(bs, &b)
+			bs = append(bs, b)
 		}
-		err = PutRecordBatch(&deliveryStreamName, bs, cfg)
+		err = PutRecordBatch(&deliveryStreamName, &bs, cfg)
 	}
 	t.Log(tm.Format("20060102"), "time")
 }

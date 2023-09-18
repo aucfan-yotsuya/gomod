@@ -15,6 +15,9 @@ func PstringSlice(strSlice []string) *[]string {
 func Pint(i int) *int {
 	return &i
 }
+func Puint(i uint) *uint {
+	return &i
+}
 func PintSlice(intSlice []int) *[]int {
 	return &intSlice
 }

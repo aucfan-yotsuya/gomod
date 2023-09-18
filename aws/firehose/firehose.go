@@ -30,18 +30,18 @@ func PutRecord(deliveryStreamName *string, data *[]byte, cfg ...aws.Config) erro
 }
 
 // PutRecordBatch 複数レコード送出
-func PutRecordBatch(deliveryStreamName *string, data []*[]byte, cfg ...aws.Config) error {
+func PutRecordBatch(deliveryStreamName *string, data *[][]byte, cfg ...aws.Config) error {
 	var f *firehose.Client
 	if len(cfg) == 0 {
-		f = firehose.New(firehose.Options{})
+		f = firehose.New(firehose.Options{Region: "ap-northeast-1"})
 	} else {
 		f = firehose.NewFromConfig(cfg[0])
 	}
 	var records []types.Record
-	for _, v := range data {
+	for _, v := range *data {
 		records = append(records,
 			types.Record{
-				Data: append(*v, []byte("\n")...),
+				Data: append(v, []byte("\n")...),
 			})
 	}
 	_, err := f.PutRecordBatch(context.TODO(), &firehose.PutRecordBatchInput{
